@@ -12,7 +12,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Database Setup ───────────────────────────────────────────
-const db = new Database(path.join(__dirname, 'tasks.db'));
+const dbPath = process.env.VERCEL ? '/tmp/tasks.db' : path.join(__dirname, 'tasks.db');
+const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 
 db.exec(`
@@ -77,6 +78,10 @@ app.delete('/api/tasks/:id', (req, res) => {
 });
 
 // ── Start Server ─────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`✅ Server running at http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
